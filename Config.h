@@ -1,7 +1,9 @@
 #ifndef ESP_LIGHT_CONFIG_H
 #define ESP_LIGHT_CONFIG_H
 
-#define FIRMWARE_VERSION "0.1.0"
+#include <string>
+
+#define FIRMWARE_VERSION "0.3.0"
 
 #define INTERVAL_PUBLISH_STATE 600000 // Interval to send statistics to the mqtt broker
 
@@ -16,31 +18,33 @@
 #define MQTT_KEEP_ALIVE_SECONDS 30
 
 /* Motion sensors settings */
-#define MOTION_SENSOR1_PIN D2
-#define MOTION_SENSOR1_TOPIC "motion/downstairs"
+#define MOTION_SENSOR1_PIN D0
+#define MOTION_SENSOR1_TOPIC "motion/upstairs"
 
 #define MOTION_SENSOR2_PIN D3
-#define MOTION_SENSOR2_TOPIC "motion/upstairs"
+#define MOTION_SENSOR2_TOPIC "motion/downstairs"
 
-/* WiFi manager settings */
+/* WiFi Manager settings */
 #define WIFI_AP_NAME "Stairs"
 #define WIFI_AP_PASS "123456789"
+
 
 /* Device settings */
 #define DATA_PIN    D1
 #define NUM_LEDS    150
 
+
 struct DeviceState {
   bool state = false;
   
-  byte red = 255;
-  byte green = 255;
-  byte blue = 255;
-  byte brightness = 128;
+  uint8_t red = 255;
+  uint8_t green = 255;
+  uint8_t blue = 255;
+  uint8_t brightness = 32;
 
   int transition;
 
-  String effect;
+  std::string effect;
 };
 
 

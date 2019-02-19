@@ -1,6 +1,7 @@
 #ifndef ESP_LIGHT_DEVICE_CONTROL_H
 #define ESP_LIGHT_DEVICE_CONTROL_H
 
+#include <map>
 #include <FastLED.h>
 #include "Config.h"
 
@@ -43,6 +44,12 @@ public:
    */
   void run();
 
+  /* Effects */
+  void efLightUp();
+  void efLightDown();
+  void efDimUp();
+  void efDimDown();
+
 private:
   void transition();
   float m_current_brightness;
@@ -52,7 +59,17 @@ private:
   
   CRGB leds[NUM_LEDS];
   struct DeviceState *m_deviceState;
-  String m_currentEffect;
+
+  /* Effects */
+  uint8_t m_effect_lightUp_index = NUM_LEDS - 1;
+  uint8_t m_effect_lightDown_index = 0;
+
+  std::map< std::string, std::function<void(void)> > m_lightEffectsList = {
+    {"LightDown",      std::bind(&DeviceControl::efLightDown, this)},
+    {"LightUp",        std::bind(&DeviceControl::efLightUp, this)},
+    {"DimDown",        std::bind(&DeviceControl::efDimDown, this)},
+    {"DimUp",          std::bind(&DeviceControl::efDimUp, this)},
+  };
 };
 
 #endif //ESP_LIGHT_DEVICE_CONTROL_H

@@ -7,6 +7,9 @@
 
 #include <functional>
 
+#include "Config.h"
+
+
 /*
  * The structure of the JSON document:
  * {
@@ -48,11 +51,13 @@ public:
    * whenever the mqtt client receives an mqtt command message 
    * to change the current device state.
    */
-  void onDeviceStateUpdate(std::function<void(void)> updateDeviceState) {
+  void onMessageReveived(std::function<void(void)> updateDeviceState) {
     m_updateDeviceState = updateDeviceState;
   }
 
-protected:
+  void motionSensorStatePublish(char *sensorId, uint8_t state);
+
+private:
   void onMqttConnect(bool sessionPresent);
   void onMqttDisconnect(AsyncMqttClientDisconnectReason reason);
   void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total);

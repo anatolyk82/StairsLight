@@ -1,5 +1,4 @@
 #include "MqttClient.h"
-#include "Config.h"
 
 DeviceMqttClient::DeviceMqttClient() : AsyncMqttClient()
   , m_updateDeviceState(nullptr)
@@ -98,7 +97,7 @@ void DeviceMqttClient::onMqttMessage(char* topic, char* payload, AsyncMqttClient
 
       if (json.containsKey("effect")) {
         const char* effect = json["effect"];
-        m_deviceState->effect = String(effect);
+        m_deviceState->effect = std::string(effect);
       } else {
         m_deviceState->effect = "";
       }
@@ -108,7 +107,8 @@ void DeviceMqttClient::onMqttMessage(char* topic, char* payload, AsyncMqttClient
       } else {
         m_deviceState->transition = 0;
       }
-        
+
+      /* Update actual state of the device*/
       if (m_updateDeviceState) {
         m_updateDeviceState();
       }
@@ -136,7 +136,7 @@ void DeviceMqttClient::publishDeviceState() {
   }
 
   if ( m_deviceState->effect != "" ) {
-    root["effect"] = m_deviceState->effect;
+    root["effect"] = m_deviceState->effect.c_str();
   }/* else {
     root["effect"] = ""; //TODO: Is this really needed to send an empty string ?
   }*/
@@ -177,4 +177,11 @@ void DeviceMqttClient::publishDeviceState() {
   Serial.printf("\nMQTT: Publish state: %s\n", buffer);
 
   publish(MQTT_TOPIC_STATE, 0, true, buffer);
+}
+
+
+void DeviceMqttClient::motionSensorStatePublish(char *sensorId, uint8_t state)
+{
+  Serial.printf("\nMQTT: Publish motion sensor state: %s\n", sensorId);
+  publish(sensorId, 0, false, (state ? "on" : "off") );
 }

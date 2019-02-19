@@ -1,10 +1,9 @@
 #include "DeviceControl.h"
-#include "Effects.h"
+#include "Config.h"
 
 DeviceControl::DeviceControl() :
   m_deviceState(nullptr),
-  m_inTransition(false),
-  m_currentEffect("")
+  m_inTransition(false)
 {
 }
 
@@ -41,18 +40,14 @@ void DeviceControl::updateDeviceState()
     Serial.printf("DeviceControl: red:[%d], green:[%d], blue:[%d]\n", m_deviceState->red, m_deviceState->green, m_deviceState->blue);
     Serial.printf("DeviceControl: brightness:[%d]\n", m_deviceState->brightness);
 
-    if ((m_deviceState->effect != "") && (m_deviceState->effect != EFFECT_STOP)) {
-      //Serial.printf("DeviceControl: Effect:[%s]\n", m_deviceState->effect.toCharArray());
+    if ( (m_deviceState->effect != "") && (m_lightEffectsList.find(m_deviceState->effect) != m_lightEffectsList.end()) ) {
       FastLED.clear();
-      m_currentEffect = m_deviceState->effect;
     } else {
-      m_currentEffect = "";
       this->setColor(m_deviceState->red, m_deviceState->green, m_deviceState->blue, m_deviceState->brightness);
     }
   } else {
     Serial.println("DeviceControl: Switch the device off");
-    m_deviceState->effect != "";
-    m_currentEffect = "";
+    m_deviceState->effect = "";
     FastLED.clear();
   }
   FastLED.show();
@@ -60,26 +55,23 @@ void DeviceControl::updateDeviceState()
 
 
 void DeviceControl::transition() {
-  EVERY_N_MILLISECONDS(50) {
-    if (m_deviceState->state) { // Transition to ON
-      m_current_brightness = m_current_brightness + 50*(float)m_deviceState->brightness/(float)m_deviceState->transition;
-
-      if ( m_current_brightness >= m_deviceState->brightness) { // Stop transition
-        m_deviceState->transition = 0;
-        m_current_brightness = m_deviceState->brightness;
-        m_inTransition = false;
-      }
-    } else { // Transition to OFF
-      m_current_brightness = m_current_brightness - 50*(float)m_deviceState->brightness/(float)m_deviceState->transition;
-
-      if ( m_current_brightness <= 0) { // Stop transition
-        m_deviceState->transition = 0;
-        m_current_brightness = 0;
-        m_inTransition = false;
-      }
+  if (m_deviceState->state) { // Transition to ON
+    m_current_brightness = m_current_brightness + (50.0/1000.0)*(float)m_deviceState->brightness/(float)m_deviceState->transition;
+    if ( m_current_brightness >= m_deviceState->brightness) { // Stop transition
+      m_deviceState->transition = 0;
+      m_current_brightness = m_deviceState->brightness;
+      m_inTransition = false;
     }
-    this->setColor(m_deviceState->red, m_deviceState->green, m_deviceState->blue, m_current_brightness);
+  } else { // Transition to OFF
+    m_current_brightness = m_current_brightness - (50.0/1000.0)*(float)m_deviceState->brightness/(float)m_deviceState->transition;
+     if ( m_current_brightness <= 0) { // Stop transition
+      m_deviceState->transition = 0;
+      m_current_brightness = 0;
+      m_inTransition = false;
+    }
   }
+  this->setColor(m_deviceState->red, m_deviceState->green, m_deviceState->blue, m_current_brightness);
+  FastLED.delay(50);
 }
 
 
@@ -88,36 +80,82 @@ void DeviceControl::run()
   if ( m_inTransition ) {
     this->transition();
   } else {
-    if (m_currentEffect == EFFECT_SPARKLES) {
-      Effects::sparkles(leds, NUM_LEDS);
-    } else if (m_currentEffect == EFFECT_RAINBOW) {
-      Effects::rainbow(leds, NUM_LEDS);
-    } else if (m_currentEffect == EFFECT_RUNNER) {
-      Effects::runner(leds, NUM_LEDS, m_deviceState->red, m_deviceState->green, m_deviceState->blue);
-    } else if (m_currentEffect == EFFECT_POLICE) {
-      Effects::police(leds, NUM_LEDS);
-    } else if (m_currentEffect == EFFECT_COLORLOOP) {
-      Effects::colorloop(leds, NUM_LEDS, m_deviceState->brightness);
-    } else if (m_currentEffect == EFFECT_ALARM) {
-      Effects::alarm(leds, NUM_LEDS);
-    } else if (m_currentEffect == EFFECT_CHAOS) {
-      Effects::chaos(leds, NUM_LEDS);
-    } else if (m_currentEffect == EFFECT_RANDOMPIXELS) {
-      Effects::randomPixels(leds, NUM_LEDS);
-    } else if (m_currentEffect == EFFECT_FIRE) {
-      Effects::fire(leds, NUM_LEDS);
-    } else if (m_currentEffect == EFFECT_JUGGLE) {
-      Effects::juggle(leds, NUM_LEDS);
-    } else if (m_currentEffect == EFFECT_SINELON) {
-      Effects::sinelon(leds, NUM_LEDS);
-    } else if (m_currentEffect == EFFECT_BREATHE) {
-      Effects::breathe(leds, NUM_LEDS);
-    } else if (m_currentEffect == EFFECT_TOWER) {
-      Effects::tower(leds, NUM_LEDS);
-    } else if (m_currentEffect == EFFECT_DROP) {
-      Effects::drop(leds, NUM_LEDS);
+    if (m_lightEffectsList.find(m_deviceState->effect) != m_lightEffectsList.end()) {
+      m_lightEffectsList[ m_deviceState->effect ]();
+    } else {
+      m_deviceState->effect = "";
     }
   }
 
   FastLED.show();
+}
+
+/* --------------------------------------------------------------- */
+
+/* ---- Effects ---- */
+void DeviceControl::efLightUp()
+{    
+    if (m_effect_lightUp_index == (NUM_LEDS - 1)) {
+      FastLED.clear();
+    }
+
+    leds[m_effect_lightUp_index] = CRGB(m_deviceState->red, m_deviceState->green, m_deviceState->blue );
+    if (m_effect_lightUp_index == 0) {
+      m_deviceState->effect = "";
+      m_effect_lightUp_index = NUM_LEDS - 1;
+      this->updateDeviceState();
+    } else {
+      m_effect_lightUp_index--;
+      FastLED.delay(20);
+    }
+}
+
+void DeviceControl::efLightDown()
+{
+  if (m_effect_lightDown_index == 0) {
+    FastLED.clear();
+  }
+    
+  leds[m_effect_lightDown_index] = CRGB(m_deviceState->red, m_deviceState->green, m_deviceState->blue );
+  if (m_effect_lightDown_index == (NUM_LEDS - 1)) {
+    m_deviceState->effect = "";
+    m_effect_lightDown_index = 0;
+    this->updateDeviceState();
+  } else {
+    m_effect_lightDown_index++;
+    FastLED.delay(20);
+  }
+}
+
+
+void DeviceControl::efDimUp()
+{
+    for (uint16_t i = 0; i < (NUM_LEDS - m_effect_lightUp_index); i++) {
+      leds[NUM_LEDS - 1 - i].fadeToBlackBy(1);
+    }
+
+    EVERY_N_MILLISECONDS( 50 ) {
+      if (m_effect_lightUp_index != 0) {
+        m_effect_lightUp_index--;
+      }
+    }
+
+    uint32_t pixel_0_color = (((uint32_t)leds[0].red << 16) | ((long)leds[0].green << 8 ) | (long)leds[0].blue);
+    if ( pixel_0_color == 0 ) {
+      FastLED.clear();
+      m_deviceState->effect = "";
+      m_deviceState->state = false;
+      m_effect_lightUp_index = NUM_LEDS - 1;
+      this->updateDeviceState();
+    }
+}
+
+void DeviceControl::efDimDown()
+{
+  //TODO: To be implemented
+
+  m_deviceState->effect = "";
+  m_deviceState->state = false;
+  m_effect_lightDown_index = 0;
+  this->updateDeviceState();
 }

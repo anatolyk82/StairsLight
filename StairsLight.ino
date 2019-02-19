@@ -1,9 +1,9 @@
-
+  
 #include <SimpleTimer.h>          // https://github.com/schinken/SimpleTimer
 
 #include "Config.h"
 #include "UiManager.h"
-#include "MqttClientExtended.h"
+#include "MqttClient.h"
 #include "DeviceControl.h"
 #include "MotionSensor.h"
 
@@ -11,7 +11,7 @@
 UiManager uiManager;
 
 /* MQTT Client instance */
-DeviceMqttClientExtended mqttClient;
+DeviceMqttClient mqttClient;
 
 /* The state of this device */
 DeviceState deviceState;
@@ -39,6 +39,10 @@ void setup() {
   //clean FS, for testing
   //SPIFFS.format();
 
+  /* Initialize the device */
+  device.setDeviceStateReference( &deviceState );
+  device.initDevice();
+
   /* Create UI and connect to WiFi */
   uiManager.initUIManager(false);
 
@@ -56,7 +60,7 @@ void setup() {
   }
 
   /* Set a callback to update the actual state of the device when an mqtt command is received */
-  mqttClient.onDeviceStateUpdate( std::bind(&DeviceControl::updateDeviceState, &device) );
+  mqttClient.onMessageReveived( std::bind(&DeviceControl::updateDeviceState, &device) );
 
   /* Connect the MQTT client to the broker */
   int8_t attemptToConnectToMQTT = 0;
@@ -74,10 +78,6 @@ void setup() {
     attemptToConnectToMQTT += 1;
   }
 
-  /* Set callbacks for motion sensors */
-  motionSensor1.onMotionStateChanged( std::bind(&DeviceMqttClientExtended::motionSensorStatePublish, &mqttClient, std::placeholders::_1, std::placeholders::_2) );
-  motionSensor2.onMotionStateChanged( std::bind(&DeviceMqttClientExtended::motionSensorStatePublish, &mqttClient, std::placeholders::_1, std::placeholders::_2) );
-
   /* If there is still no connection here, restart the device */  
   if (!WiFi.isConnected()) {
     Serial.println("setup(): WiFi is not connected. Reset the device to initiate connection again.");
@@ -89,9 +89,9 @@ void setup() {
     ESP.restart();
   }
 
-  /* Initialize the device */
-  device.setDeviceStateReference( &deviceState );
-  device.initDevice();
+  /* Set callbacks for motion sensors */
+  motionSensor1.onMotionStateChanged( std::bind(&DeviceMqttClient::motionSensorStatePublish, &mqttClient, std::placeholders::_1, std::placeholders::_2) );
+  motionSensor2.onMotionStateChanged( std::bind(&DeviceMqttClient::motionSensorStatePublish, &mqttClient, std::placeholders::_1, std::placeholders::_2) );
 
   /* Publish device state periodicly */
   timer.setInterval(INTERVAL_PUBLISH_STATE, publishDeviceStateTimer);
