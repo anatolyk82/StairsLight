@@ -138,24 +138,27 @@ void DeviceControl::efLightDown()
 
 void DeviceControl::efDimUp()
 {
-    for (uint16_t i = 0; i < (NUM_LEDS - m_effect_lightUp_index); i++) {
-      leds[NUM_LEDS - 1 - i].fadeToBlackBy(10);
-    }
+  for (uint16_t i = 0; i < (NUM_LEDS - m_effect_lightUp_index); i++) {
+    leds[NUM_LEDS - 1 - i].fadeToBlackBy(10);
+  }
 
-    if (m_effect_lightUp_index != 0) {
-      m_effect_lightUp_index--;
-    }
+  if (m_effect_lightUp_index != 0) {
+    m_effect_lightUp_index--;
+  }
 
-    uint32_t pixel_0_color = (((uint32_t)leds[0].red << 16) | ((long)leds[0].green << 8 ) | (long)leds[0].blue);
-    if ( pixel_0_color == 0 ) {
-      FastLED.clear();
-      m_deviceState->effect = "";
-      m_deviceState->state = false;
-      m_effect_lightUp_index = NUM_LEDS - 1;
-      this->updateDeviceState();
+  uint32_t pixel_0_color = (((uint32_t)leds[0].red << 16) | ((long)leds[0].green << 8 ) | (long)leds[0].blue);
+  if ( pixel_0_color == 0 ) {
+    FastLED.clear();
+    m_deviceState->effect = "";
+    m_deviceState->state = false;
+    m_effect_lightUp_index = NUM_LEDS - 1;
+    this->updateDeviceState();
+    if (m_sendMessageState) {
+      m_sendMessageState();
     }
+  }
 
-    FastLED.delay(40);
+  FastLED.delay(40);
 }
 
 void DeviceControl::efDimDown()
@@ -175,6 +178,9 @@ void DeviceControl::efDimDown()
     m_deviceState->state = false;
     m_effect_lightDown_index = 0;
     this->updateDeviceState();
+    if (m_sendMessageState) {
+      m_sendMessageState();
+    }
   }
 
   FastLED.delay(40);

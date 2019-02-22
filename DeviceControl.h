@@ -38,6 +38,14 @@ public:
    */
   void updateDeviceState();
 
+  /*
+   * This function sets a reference to a callback to be called
+   * when the current state of the device has changed.
+   */
+  void onDeviceStateChanged(std::function<void(void)> sendMessageState) {
+    m_sendMessageState = sendMessageState;
+  }
+
   /* 
    * Run the device.
    * It must be called in loop()
@@ -56,6 +64,8 @@ private:
   void transition();
   float m_current_brightness;
   bool m_inTransition;
+
+  std::function<void(void)> m_sendMessageState = nullptr;
 
   void setColor(byte red, byte green, byte blue, byte brightness);
   

@@ -42,6 +42,7 @@ void setup() {
   /* Initialize the device */
   device.setDeviceStateReference( &deviceState );
   device.initDevice();
+  device.onDeviceStateChanged( std::bind(&DeviceMqttClient::publishDeviceState, &mqttClient) );
 
   /* Create UI and connect to WiFi */
   uiManager.initUIManager(false);
