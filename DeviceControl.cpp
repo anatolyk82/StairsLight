@@ -20,9 +20,9 @@ void DeviceControl::initDevice()
 
 void DeviceControl::setColor(byte red, byte green, byte blue, byte brightness)
 {
-  byte realRed = map(red, 0, 255, 0, brightness);
-  byte realGreen = map(green, 0, 255, 0, brightness);
-  byte realBlue = map(blue, 0, 255, 0, brightness);
+  uint8_t realRed = map(red, 0, 255, 0, brightness);
+  uint8_t realGreen = map(green, 0, 255, 0, brightness);
+  uint8_t realBlue = map(blue, 0, 255, 0, brightness);
   fill_solid( leds, NUM_LEDS, CRGB(realRed, realGreen, realBlue) );
 }
 
@@ -41,7 +41,7 @@ void DeviceControl::updateDeviceState()
     Serial.printf("DeviceControl: brightness:[%d]\n", m_deviceState->brightness);
 
     if ( (m_deviceState->effect != "") && (m_lightEffectsList.find(m_deviceState->effect) != m_lightEffectsList.end()) ) {
-      FastLED.clear();
+      //FastLED.clear();
     } else {
       this->setColor(m_deviceState->red, m_deviceState->green, m_deviceState->blue, m_deviceState->brightness);
     }
@@ -99,7 +99,11 @@ void DeviceControl::efLightUp()
       FastLED.clear();
     }
 
-    leds[m_effect_lightUp_index] = CRGB(m_deviceState->red, m_deviceState->green, m_deviceState->blue );
+    uint8_t realRed = map(m_deviceState->red, 0, 255, 0, m_deviceState->brightness);
+    uint8_t realGreen = map(m_deviceState->green, 0, 255, 0, m_deviceState->brightness);
+    uint8_t realBlue = map(m_deviceState->blue, 0, 255, 0, m_deviceState->brightness);
+
+    leds[m_effect_lightUp_index] = CRGB(realRed, realGreen, realBlue );
     if (m_effect_lightUp_index == 0) {
       m_deviceState->effect = "";
       m_effect_lightUp_index = NUM_LEDS - 1;
@@ -115,8 +119,12 @@ void DeviceControl::efLightDown()
   if (m_effect_lightDown_index == 0) {
     FastLED.clear();
   }
+
+  uint8_t realRed = map(m_deviceState->red, 0, 255, 0, m_deviceState->brightness);
+  uint8_t realGreen = map(m_deviceState->green, 0, 255, 0, m_deviceState->brightness);
+  uint8_t realBlue = map(m_deviceState->blue, 0, 255, 0, m_deviceState->brightness);
     
-  leds[m_effect_lightDown_index] = CRGB(m_deviceState->red, m_deviceState->green, m_deviceState->blue );
+  leds[m_effect_lightDown_index] = CRGB(realRed, realGreen, realBlue );
   if (m_effect_lightDown_index == (NUM_LEDS - 1)) {
     m_deviceState->effect = "";
     m_effect_lightDown_index = 0;
@@ -131,13 +139,11 @@ void DeviceControl::efLightDown()
 void DeviceControl::efDimUp()
 {
     for (uint16_t i = 0; i < (NUM_LEDS - m_effect_lightUp_index); i++) {
-      leds[NUM_LEDS - 1 - i].fadeToBlackBy(1);
+      leds[NUM_LEDS - 1 - i].fadeToBlackBy(10);
     }
 
-    EVERY_N_MILLISECONDS( 50 ) {
-      if (m_effect_lightUp_index != 0) {
-        m_effect_lightUp_index--;
-      }
+    if (m_effect_lightUp_index != 0) {
+      m_effect_lightUp_index--;
     }
 
     uint32_t pixel_0_color = (((uint32_t)leds[0].red << 16) | ((long)leds[0].green << 8 ) | (long)leds[0].blue);
@@ -148,14 +154,63 @@ void DeviceControl::efDimUp()
       m_effect_lightUp_index = NUM_LEDS - 1;
       this->updateDeviceState();
     }
+
+    FastLED.delay(40);
 }
 
 void DeviceControl::efDimDown()
 {
-  //TODO: To be implemented
+  for (uint16_t i = 0; i < m_effect_lightDown_index; i++) {
+    leds[i].fadeToBlackBy(10);
+  }
 
-  m_deviceState->effect = "";
-  m_deviceState->state = false;
-  m_effect_lightDown_index = 0;
-  this->updateDeviceState();
+  if (m_effect_lightDown_index != NUM_LEDS) {
+    m_effect_lightDown_index++;
+  }
+
+  uint32_t pixel_N_color = (((uint32_t)leds[NUM_LEDS-1].red << 16) | ((long)leds[NUM_LEDS-1].green << 8 ) | (long)leds[NUM_LEDS-1].blue);
+  if ( pixel_N_color == 0 ) {
+    FastLED.clear();
+    m_deviceState->effect = "";
+    m_deviceState->state = false;
+    m_effect_lightDown_index = 0;
+    this->updateDeviceState();
+  }
+
+  FastLED.delay(40);
+}
+
+void DeviceControl::efStartLight()
+{
+  uint8_t realRed = map(m_deviceState->red, 0, 255, 0, m_deviceState->brightness);
+  uint8_t realGreen = map(m_deviceState->green, 0, 255, 0, m_deviceState->brightness);
+  uint8_t realBlue = map(m_deviceState->blue, 0, 255, 0, m_deviceState->brightness);
+
+  for (uint8_t i = 0; i < 3; i++) {
+    if ( i < 4 ) {
+      leds[i] = CRGB(realRed, realGreen, realBlue);
+    } else {
+      leds[i] = CRGB(0, 0, 0);
+    }
+  }
+
+  FastLED.delay(50);
+}
+
+
+void DeviceControl::efEndLight()
+{
+  uint8_t realRed = map(m_deviceState->red, 0, 255, 0, m_deviceState->brightness);
+  uint8_t realGreen = map(m_deviceState->green, 0, 255, 0, m_deviceState->brightness);
+  uint8_t realBlue = map(m_deviceState->blue, 0, 255, 0, m_deviceState->brightness);
+
+  for (uint8_t i = 0; i < NUM_LEDS; i++) {
+    if ( i < 4 ) {
+      leds[NUM_LEDS - 1 - i] = CRGB(realRed, realGreen, realBlue);
+    } else {
+      leds[NUM_LEDS - 1 - i] = CRGB(0, 0, 0);
+    }
+  }
+
+  FastLED.delay(50);
 }

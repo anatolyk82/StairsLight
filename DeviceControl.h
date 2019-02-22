@@ -49,6 +49,8 @@ public:
   void efLightDown();
   void efDimUp();
   void efDimDown();
+  void efStartLight();
+  void efEndLight();
 
 private:
   void transition();
@@ -69,6 +71,8 @@ private:
     {"LightUp",        std::bind(&DeviceControl::efLightUp, this)},
     {"DimDown",        std::bind(&DeviceControl::efDimDown, this)},
     {"DimUp",          std::bind(&DeviceControl::efDimUp, this)},
+    {"StartLight",     std::bind(&DeviceControl::efStartLight, this)},
+    {"EndLight",       std::bind(&DeviceControl::efEndLight, this)},
   };
 };
 
