@@ -33,7 +33,7 @@ void DeviceControl::updateDeviceState()
   if (m_deviceState->transition != 0) {
     m_current_brightness = m_deviceState->state ? 0 : m_deviceState->brightness;
     m_inTransition = true;
-    return; 
+    return;
   }
 
   if (m_deviceState->state) {
@@ -94,7 +94,7 @@ void DeviceControl::run()
 
 /* ---- Effects ---- */
 void DeviceControl::efLightUp()
-{    
+{
     if (m_effect_lightUp_index == (NUM_LEDS - 1)) {
       FastLED.clear();
     }
@@ -123,7 +123,7 @@ void DeviceControl::efLightDown()
   uint8_t realRed = map(m_deviceState->red, 0, 255, 0, m_deviceState->brightness);
   uint8_t realGreen = map(m_deviceState->green, 0, 255, 0, m_deviceState->brightness);
   uint8_t realBlue = map(m_deviceState->blue, 0, 255, 0, m_deviceState->brightness);
-    
+
   leds[m_effect_lightDown_index] = CRGB(realRed, realGreen, realBlue );
   if (m_effect_lightDown_index == (NUM_LEDS - 1)) {
     m_deviceState->effect = "";
@@ -219,4 +219,27 @@ void DeviceControl::efEndLight()
   }
 
   FastLED.delay(50);
+}
+
+
+void DeviceControl::efChaos()
+{
+  for (int i = 0; i < NUM_LEDS; i++) {
+    if ( (chaosEffectHelper[i].up == false) && (chaosEffectHelper[i].brightness == 0) ) {
+      chaosEffectHelper[i].hue = random(0, 255);
+      chaosEffectHelper[i].saturation = 255;
+      chaosEffectHelper[i].brightness = 0;
+      chaosEffectHelper[i].maxBrightness = random(100, 255);
+      chaosEffectHelper[i].up = true;
+    } else if ((chaosEffectHelper[i].up == true) && (chaosEffectHelper[i].brightness >= 0)) {
+      chaosEffectHelper[i].brightness = chaosEffectHelper[i].brightness + 1;
+      chaosEffectHelper[i].up = chaosEffectHelper[i].brightness < chaosEffectHelper[i].maxBrightness;
+    } else if ((chaosEffectHelper[i].up == false) && (chaosEffectHelper[i].brightness > 0)) {
+      chaosEffectHelper[i].brightness = chaosEffectHelper[i].brightness - 1;
+    }
+  }
+  for (byte j=0; j<NUM_LEDS; j++) {
+    leds[j] = CHSV(chaosEffectHelper[j].hue, chaosEffectHelper[j].saturation, chaosEffectHelper[j].brightness );
+  }
+  FastLED.delay(20);
 }

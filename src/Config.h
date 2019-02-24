@@ -3,7 +3,7 @@
 
 #include <string>
 
-#define FIRMWARE_VERSION "0.3.3"
+#define FIRMWARE_VERSION "0.3.4"
 
 #define INTERVAL_PUBLISH_STATE 600000 // Interval to send statistics to the mqtt broker
 
@@ -36,7 +36,7 @@
 
 struct DeviceState {
   bool state = false;
-  
+
   uint8_t red = 255;
   uint8_t green = 255;
   uint8_t blue = 255;
