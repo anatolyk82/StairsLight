@@ -135,7 +135,6 @@ void DeviceControl::efLightDown()
   }
 }
 
-
 void DeviceControl::efDimUp()
 {
   for (uint16_t i = 0; i < (NUM_LEDS - m_effect_lightUp_index); i++) {
@@ -203,7 +202,6 @@ void DeviceControl::efStartLight()
   FastLED.delay(50);
 }
 
-
 void DeviceControl::efEndLight()
 {
   uint8_t realRed = map(m_deviceState->red, 0, 255, 0, m_deviceState->brightness);
@@ -220,7 +218,6 @@ void DeviceControl::efEndLight()
 
   FastLED.delay(50);
 }
-
 
 void DeviceControl::efChaos()
 {
@@ -242,4 +239,58 @@ void DeviceControl::efChaos()
     leds[j] = CHSV(chaosEffectHelper[j].hue, chaosEffectHelper[j].saturation, chaosEffectHelper[j].brightness );
   }
   FastLED.delay(20);
+}
+
+void DeviceControl::efCometUp()
+{
+  if (m_effect_lightUp_index == (NUM_LEDS - 1)) {
+    FastLED.clear();
+  }
+
+  uint8_t realRed = map(m_deviceState->red, 0, 255, 0, m_deviceState->brightness);
+  uint8_t realGreen = map(m_deviceState->green, 0, 255, 0, m_deviceState->brightness);
+  uint8_t realBlue = map(m_deviceState->blue, 0, 255, 0, m_deviceState->brightness);
+
+  fadeToBlackBy( leds, NUM_LEDS, 15);
+
+  leds[m_effect_lightUp_index] = CRGB(realRed, realGreen, realBlue );
+  if (m_effect_lightUp_index == 0) {
+    m_deviceState->effect = "";
+    m_deviceState->state = false;
+    m_effect_lightUp_index = NUM_LEDS - 1;
+    this->updateDeviceState();
+    if (m_sendMessageState) {
+      m_sendMessageState();
+    }
+  } else {
+    m_effect_lightUp_index--;
+    FastLED.delay(15);
+  }
+}
+
+void DeviceControl::efCometDown()
+{
+  if (m_effect_lightDown_index == 0) {
+    FastLED.clear();
+  }
+
+  uint8_t realRed = map(m_deviceState->red, 0, 255, 0, m_deviceState->brightness);
+  uint8_t realGreen = map(m_deviceState->green, 0, 255, 0, m_deviceState->brightness);
+  uint8_t realBlue = map(m_deviceState->blue, 0, 255, 0, m_deviceState->brightness);
+
+  fadeToBlackBy( leds, NUM_LEDS, 15);
+
+  leds[m_effect_lightDown_index] = CRGB(realRed, realGreen, realBlue );
+  if (m_effect_lightDown_index == (NUM_LEDS - 1)) {
+    m_deviceState->effect = "";
+    m_deviceState->state = false;
+    m_effect_lightDown_index = 0;
+    this->updateDeviceState();
+    if (m_sendMessageState) {
+      m_sendMessageState();
+    }
+  } else {
+    m_effect_lightDown_index++;
+    FastLED.delay(15);
+  }
 }

@@ -68,6 +68,8 @@ public:
   void efStartLight();
   void efEndLight();
   void efChaos();
+  void efCometUp();
+  void efCometDown();
 
 private:
   void transition();
@@ -95,6 +97,8 @@ private:
     {"StartLight",     std::bind(&DeviceControl::efStartLight, this)},
     {"EndLight",       std::bind(&DeviceControl::efEndLight, this)},
     {"Chaos",          std::bind(&DeviceControl::efChaos, this)},
+    {"CometUp",        std::bind(&DeviceControl::efCometUp, this)},
+    {"CometDown",      std::bind(&DeviceControl::efCometDown, this)},
   };
 };
 
