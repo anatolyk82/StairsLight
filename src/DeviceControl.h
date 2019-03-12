@@ -67,6 +67,7 @@ public:
   void efDimDown();
   void efStartLight();
   void efEndLight();
+  void efNightLight();
   void efChaos();
   void efCometUp();
   void efCometDown();
@@ -96,6 +97,7 @@ private:
     {"DimUp",          std::bind(&DeviceControl::efDimUp, this)},
     {"StartLight",     std::bind(&DeviceControl::efStartLight, this)},
     {"EndLight",       std::bind(&DeviceControl::efEndLight, this)},
+    {"NightLight",     std::bind(&DeviceControl::efNightLight, this)},
     {"Chaos",          std::bind(&DeviceControl::efChaos, this)},
     {"CometUp",        std::bind(&DeviceControl::efCometUp, this)},
     {"CometDown",      std::bind(&DeviceControl::efCometDown, this)},
